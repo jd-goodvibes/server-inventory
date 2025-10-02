@@ -38,10 +38,19 @@ PACKAGES=$(dpkg-query -W -f='${Package}\n' 2>/dev/null \
 
 # Caddy domains (from Caddyfile)
 CADDY_DOMAINS=$(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]+' /etc/caddy/Caddyfile 2>/dev/null \
-  | awk '{print $1}' \
-  | tr -d '{}' \
+  | sed 's/{.*//; s/,/ /g' \
+  | awk '{for(i=1;i<=NF;i++) print $i}' \
   | sort -u \
   | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+# System stats (CPU, RAM, Disk)
+SYSTEM_STATS=$(jq -n \
+  --argjson cpu "$(nproc)" \
+  --argjson mem_total "$(grep MemTotal /proc/meminfo | awk '{print $2}')" \
+  --argjson mem_avail "$(grep MemAvailable /proc/meminfo | awk '{print $2}')" \
+  --argjson disk_total "$(df -BG --total | grep total | awk '{print $2}' | tr -d 'G')" \
+  --argjson disk_avail "$(df -BG --total | grep total | awk '{print $4}' | tr -d 'G')" \
+  '{cpu_count: $cpu, mem_total_kb: $mem_total, mem_available_kb: $mem_avail, disk_total_gb: $disk_total, disk_available_gb: $disk_avail}')
 
 # Combine everything into JSON
 jq -n \
@@ -67,4 +76,3 @@ jq -n \
     caddy_domains: $caddy,
     system_stats: $stats
   }'
-
