@@ -37,11 +37,13 @@ PACKAGES=$(dpkg-query -W -f='${Package}\n' 2>/dev/null \
   | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
 # Caddy domains (from Caddyfile)
-CADDY_DOMAINS=$(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]+' /etc/caddy/Caddyfile 2>/dev/null \
+CADDY_DOMAINS=$(grep -E '^[[:space:]]*[a-zA-Z0-9.-]+\.[a-zA-Z]+' /etc/caddy/Caddyfile 2>/dev/null \
   | sed 's/{.*//; s/,/ /g' \
   | awk '{for(i=1;i<=NF;i++) print $i}' \
+  | sed 's/:.*//g' \
   | sort -u \
   | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
 
 # System stats (CPU, RAM, Disk)
 SYSTEM_STATS=$(jq -n \
