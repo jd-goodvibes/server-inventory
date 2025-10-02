@@ -36,10 +36,10 @@ PACKAGES=$(dpkg-query -W -f='${Package}\n' 2>/dev/null \
   | sort \
   | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
-# Caddy subdomains
-CADDY_DOMAINS=$(grep -E '^[a-zA-Z0-9.,-]+\.[a-zA-Z]+' /etc/caddy/Caddyfile 2>/dev/null \
-  | sed 's/{.*//; s/,/ /g' \
-  | awk '{for(i=1;i<=NF;i++) print $i}' \
+# Caddy domains (from Caddyfile)
+CADDY_DOMAINS=$(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]+' /etc/caddy/Caddyfile 2>/dev/null \
+  | awk '{print $1}' \
+  | tr -d '{}' \
   | sort -u \
   | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
