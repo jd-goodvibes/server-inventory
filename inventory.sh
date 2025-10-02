@@ -36,6 +36,14 @@ PACKAGES=$(dpkg-query -W -f='${Package}\n' \
   | sort \
   | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
+# --- NEW: Extract subdomains from Caddyfile ---
+CADDY_DOMAINS=$(if [ -f /etc/caddy/Caddyfile ]; then
+  grep -E '^[^[:space:]#]' /etc/caddy/Caddyfile | awk '{print $1}' \
+  | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))'
+else
+  echo '[]'
+fi)
+
 # Combine everything into JSON
 jq -n \
   --arg host "$HOST" \
@@ -46,6 +54,7 @@ jq -n \
   --argjson syscron "$SYSTEM_CRON" \
   --argjson docker "$DOCKER_CONTAINERS" \
   --argjson pkgs "$PACKAGES" \
+  --argjson caddydomains "$CADDY_DOMAINS" \
   '{
     host: $host,
     generated: $date,
@@ -54,5 +63,6 @@ jq -n \
     user_cron: $usercron,
     system_cron: $syscron,
     docker_containers: $docker,
-    installed_packages: $pkgs
+    installed_packages: $pkgs,
+    caddy_subdomains: $caddydomains
   }'
