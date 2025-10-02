@@ -54,6 +54,7 @@ jq -n \
   --argjson docker "$DOCKER_CONTAINERS" \
   --argjson pkgs "$PACKAGES" \
   --argjson caddy "$CADDY_DOMAINS" \
+  --argjson stats "$SYSTEM_STATS" \
   '{
     host: $host,
     generated: $date,
@@ -63,5 +64,7 @@ jq -n \
     system_cron: $syscron,
     docker_containers: $docker,
     installed_packages: $pkgs,
-    caddy_domains: $caddy
+    caddy_domains: $caddy,
+    system_stats: $stats
   }'
+
