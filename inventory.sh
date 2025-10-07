@@ -46,13 +46,16 @@ CADDY_DOMAINS=$(grep -E '^[[:space:]]*[a-zA-Z0-9.-]+\.[a-zA-Z]+' /etc/caddy/Cadd
 
 
 # System stats (CPU, RAM, Disk)
+ROOT_DEVICE=$(df / | tail -1 | awk '{print $1}')
+
 SYSTEM_STATS=$(jq -n \
   --argjson cpu "$(nproc)" \
   --argjson mem_total "$(grep MemTotal /proc/meminfo | awk '{print $2}')" \
   --argjson mem_avail "$(grep MemAvailable /proc/meminfo | awk '{print $2}')" \
-  --argjson disk_total "$(df -BG / | tail -1 | awk '{print $2}' | tr -d 'G')" \
-  --argjson disk_avail "$(df -BG / | tail -1 | awk '{print $4}' | tr -d 'G')" \
+  --argjson disk_total "$(df -BG | awk -v dev="$ROOT_DEVICE" '$1 == dev {print $2}' | tr -d 'G')" \
+  --argjson disk_avail "$(df -BG | awk -v dev="$ROOT_DEVICE" '$1 == dev {print $4}' | tr -d 'G')" \
   '{cpu_count: $cpu, mem_total_kb: $mem_total, mem_available_kb: $mem_avail, disk_total_gb: $disk_total, disk_available_gb: $disk_avail}')
+
 
 # Combine everything into JSON
 jq -n \
